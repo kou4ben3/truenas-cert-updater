@@ -1,2 +1,5 @@
 .config.json
 .config.yaml
+.config.yml
+.venv/
+__pycache__/
