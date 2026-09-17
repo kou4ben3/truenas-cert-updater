@@ -3,6 +3,7 @@
 from __future__ import annotations
 import re
 import datetime
+import ipaddress
 import os
 import pathlib
 import ssl
@@ -85,6 +86,13 @@ def websocket_url(api_base_url: str) -> str:
             raise ValueError
         # Validate the port without reconstructing netloc (which preserves IPv6).
         parsed.port
+        if parsed.scheme in {"http", "ws"}:
+            try:
+                if not ipaddress.ip_address(parsed.hostname).is_loopback:
+                    raise ValueError
+            except ValueError:
+                if parsed.hostname.lower() != "localhost":
+                    raise ValueError
         path = parsed.path.rstrip("/")
         if path.endswith("/websocket"):
             raise ValueError
@@ -94,7 +102,7 @@ def websocket_url(api_base_url: str) -> str:
             path += "/api/current"
         return urlunsplit((schemes[parsed.scheme], parsed.netloc, path, "", ""))
     except (ValueError, TypeError):
-        raise APIError("Invalid api_base_url; use a TrueNAS HTTP(S) base URL or JSON-RPC WebSocket URL.") from None
+        raise APIError("Invalid api_base_url; use an HTTPS/WSS URL (or loopback HTTP/WS URL).") from None
 
 
 class TrueNASClient:

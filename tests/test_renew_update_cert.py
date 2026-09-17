@@ -172,19 +172,20 @@ class ConfigTests(unittest.TestCase):
     def test_url_translation(self):
         cases = {
             "https://127.0.0.1/api/v2.0/": "wss://127.0.0.1/api/current",
-            "http://nas:8080/api/v2.0": "ws://nas:8080/api/current",
+            "http://127.0.0.1:8080/api/v2.0": "ws://127.0.0.1:8080/api/current",
             "https://[::1]:444/proxy/api/v2.0": "wss://[::1]:444/proxy/api/current",
             "https://nas": "wss://nas/api/current",
             "https://nas/proxy/": "wss://nas/proxy/api/current",
             "wss://nas/proxy/api/current": "wss://nas/proxy/api/current",
-            "ws://nas/api/v25.10.0/": "ws://nas/api/v25.10.0",
+            "ws://localhost/api/v25.10.0/": "ws://localhost/api/v25.10.0",
         }
         for source, expected in cases.items():
             with self.subTest(source=source):
                 self.assertEqual(app.websocket_url(source), expected)
 
     def test_bad_urls_fail_without_echoing_input(self):
-        for url in ["ftp://nas", "https://", "https://nas:bad", "ws://nas/websocket",
+        for url in ["ftp://nas", "https://", "https://nas:bad", "http://nas:8080/api/v2.0",
+                    "ws://nas/api/v25.10.0", "ws://nas/websocket",
                     f"https://user:{SECRET}@nas", f"https://nas?key={SECRET}"]:
             with self.subTest(url=url), self.assertRaises(app.APIError) as caught:
                 app.websocket_url(url)
